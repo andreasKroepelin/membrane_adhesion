@@ -4,15 +4,6 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
-        el
-    end
-end
-
 # ╔═╡ 9402df7c-4c3d-11eb-0f04-670058576045
 using Plots, PlutoUI, Optim
 
@@ -94,7 +85,7 @@ end
 
 # ╔═╡ b2c22d78-511f-11eb-1fa6-091be862c054
 md"""
-Some grid points have **sticker proteins attached**:
+Some grid points have irreversible **sticker proteins attached**:
 """
 
 # ╔═╡ d28451b8-511f-11eb-1357-9b9bcfd4a484
@@ -106,7 +97,7 @@ end
 # ╔═╡ 0c9067de-5120-11eb-2237-713e8e71e70c
 md"""
 ↪ grid point ``i`` has **two degrees of freedom**:
-- height ``h_i \in \mathbb{R}_{\geq 0}``
+- height ``h_i \in \mathbb{R}``
 - sticker attached? ``n_i \in \{0, 1\}``
 """
 
@@ -124,13 +115,18 @@ md"""
 ## Refresher: harmonic and linear potentials
 """
 
+# ╔═╡ b1c888e0-51f1-11eb-3539-d9029b5aadca
+md"""
+> Potential ``V(x)`` ⟶ Force ``F(x) = -\frac{\mathrm{d}V(x)}{\mathrm{d}x}``
+"""
+
 # ╔═╡ c62d8b2a-5136-11eb-04e9-61f66857db36
 TwoColumn(
 	md"""
 	### Harmonic potential
 	Spring, pendulum, hole through earth
 	
-	**force:** ``\text{const} \cdot x``
+	**force:** ``-\text{const} \cdot x``
 	
 	**potential:** ``\frac12 \text{const} \cdot x^2``
 	""",
@@ -149,12 +145,12 @@ TwoColumn(
 	### Linear potential
 	Free fall, accelerating rocket
 	
-	**force:** ``\text{const}``
+	**force:** ``-\text{const}``
 	
 	**potential:** ``\text{const} \cdot x``
 	""",
 	let
-		a = @animate for t in 1:-.05:0
+		a = @animate for t in 1:-.02:0
 			plot([0], [t], xlim=(-1,1), ylim=(0,1), ms=10, shape=:circle, showaxis=false, leg=:none, c=2, gridalpha=0.3)
 		end
 		gif(a, fps=15)
@@ -164,7 +160,6 @@ TwoColumn(
 # ╔═╡ 5dc4c808-512c-11eb-2014-09beef01c5ff
 md"""
 ## Elastic membrane bending
-
 """
 
 # ╔═╡ 8fcea4c2-5131-11eb-2485-33adf0944eea
@@ -192,32 +187,171 @@ TwoColumn(
 	end
 )
 
-# ╔═╡ 354a363c-4c3e-11eb-2d7d-398e30d0d89c
-@bind α Slider(1:.1:3)
+# ╔═╡ 1afe5352-51b5-11eb-02c0-0b85f5ece696
+md"""
+## Generic interaction potential
+"""
 
-# ╔═╡ dda5740e-4c3e-11eb-09f9-93185afaefc1
-α
+# ╔═╡ 5f9c70f2-51e9-11eb-2aaa-a9f77c2bf308
+TwoColumn(
+	md"""
+	Membrane is close to surface/other membrane → *Lennard-Jones potential*
+	
+	Local approximation as **harmonic potential**: ``V_\text{g}(h) = h^2``
+	
+	(``h = 0`` at minimum of potential)
+	""",
+	let
+		σ = .4
+		m = 2^(1/6) * σ
+		plot(.39:.005:.9, r -> (σ/r)^12 - (σ/r)^6, label="Lennard-Jones", lw=2, size=(400,300), ticks=false, xguide="distance", yguide="potential")
+		plot!((m-.05):.005:(m+.0525), r -> 40 * (r - m)^2 - 1/4, label="harmonic approximation", lw=2)
+	end
+)
 
-# ╔═╡ a3d46864-4c40-11eb-10b1-fd5ce77cde34
-@bind ϵ Slider(-.1:.01:.1)
+# ╔═╡ 33935bb8-51f0-11eb-3cba-41bbf9fda673
+md"""
+## Specific interaction potential
 
-# ╔═╡ b4d5c3ec-4c40-11eb-178f-d7b83eb832fc
-ϵ
+Extended sticker molecules *constantly pull down*.
 
-# ╔═╡ 2718742a-4c3e-11eb-2fe6-a7576ffbd2cd
-μ = -α^2/2 + ϵ
+**Force** ``-\alpha`` and **potential** ``V_\text{s}(h) = \alpha \cdot h``
 
-# ╔═╡ e9dc97a8-4c3d-11eb-38cf-77ff3d88cbbf
-V_ef(h) = .5 * h^2 - log(1 + exp(μ - α * h))
+Stickers also have internal **chemical potential** ``\mu``
 
-# ╔═╡ 1566ae32-4c3f-11eb-0584-35a6a6a66ac9
-h(z) = z - α/2
+Only relevant for grid points ``i`` with sticker: ``n_i \cdot (\alpha h_i - \mu)``
+"""
 
-# ╔═╡ 4aa320de-4c3e-11eb-1430-19b130c88fe8
-plot(-2:.1:2, V_ef.(h.((-2:.1:2))))
+# ╔═╡ 884fb50a-529c-11eb-0b1d-077dc6aac82f
+md"""
+## Putting it all together
 
-# ╔═╡ e7aaff68-4d09-11eb-3dbd-21317062a338
-optimize(V_ef ∘ h, -2, 2) |> Optim.minimizer
+Total energy of the system (*Hamiltionian*):
+```math
+\mathcal{H}(h,n) = \sum_i \frac{\kappa}{2} ( \Delta h_i )^2 + \frac12 h_i^2 + n_i \cdot (\alpha h_i - \mu)
+```
+"""
+
+# ╔═╡ 9746768c-529e-11eb-1872-2f8ea1befbb4
+md"### watch it in action:"
+
+# ╔═╡ 67769042-529c-11eb-39df-4bf23071224f
+κ, α = .05, .1;
+
+# ╔═╡ 13a98e26-529f-11eb-34ee-991ba1a30a68
+md"""
+## Partition functions
+
+Statistical physics describes systems **as a whole**, summarising all particles
+
+Important tool: **partition function ``\mathcal{Z}`` → sum of all state probabilities**
+
+###### Probability of a state
+Boltzmann says: probability proportional to ``\exp(-\frac{1}{T} E)`` for state with energy ``E``
+
+⟶ sum up all those terms for every state
+"""
+
+# ╔═╡ 8dc766a4-52ba-11eb-2980-cb039c493081
+md"""
+## Partition function for our membrane system
+###### states:
+- each ``h_i`` can have some value → one integral for each grid point
+- each ``n_i`` can be 0 or 1 → sum over ``\{0,1\}`` for each grid point
+
+###### partition function for 3 grid points:
+```math
+\mathcal{Z} = \int \int \int \left( \sum_{n_1 \in \{0,1\}} \sum_{n_2 \in \{0,1\}} \sum_{n_3 \in \{0,1\}} \exp \left( -\frac{1}{T} \mathcal{H}(h, n) \right) \right) \mathrm{d} h_1\, \mathrm{d} h_2\, \mathrm{d} h_3
+```
+"""
+
+# ╔═╡ 3d545e7c-52a4-11eb-3cfe-ff3123a63d1d
+md"""
+## Can we get that any simpler, please?
+
+> Consider only sums over ``n_i``:
+> ```math
+> \sum_{n_1 \in \{0,1\}} \sum_{n_2 \in \{0,1\}} \sum_{n_3 \in \{0,1\}} \exp \left( -\frac{1}{T} \mathcal{H}(h, n) \right)
+> ```
+> Substitute Hamiltonian:
+> ```math
+> \sum_{n_1 \in \{0,1\}} \sum_{n_2 \in \{0,1\}} \sum_{n_3 \in \{0,1\}} \exp \left( -\frac{1}{T} \sum_i \underbrace{ \frac{\kappa}{2} ( \Delta h_i )^2 + \frac12 h_i^2 }_{\text{independent of } n} + n_i \cdot (\alpha h_i - \mu) \right)
+> ```
+> ```math
+> = \text{independent} \cdot \sum_{n_1 \in \{0,1\}} \sum_{n_2 \in \{0,1\}} \sum_{n_3 \in \{0,1\}} \exp \left( -\frac{1}{T} \sum_i n_i \cdot (\alpha h_i - \mu) \right)
+> ```
+> Focus on sum over specific potentials:
+> ```math
+> \sum_{n_1 \in \{0,1\}} \sum_{n_2 \in \{0,1\}} \sum_{n_3 \in \{0,1\}} \exp \left( -\frac{1}{T}  \left ( \begin{array}{c} n_1 \cdot (\alpha h_1 - \mu) + \\ n_2 \cdot (\alpha h_2 - \mu) + \\ n_3 \cdot (\alpha h_3 - \mu) \end{array} \right) \right)
+> ```
+> ```math
+> = \sum_{n_1 \in \{0,1\}} \sum_{n_2 \in \{0,1\}} \sum_{n_3 \in \{0,1\}} \exp(\ldots n_1 \ldots) \exp(\ldots n_2 \ldots) \exp(\ldots n_3 \ldots)
+> ```
+> Consider this identity:
+> ```math
+> \sum_i \sum_j \sum_k f(i) \cdot f(j) \cdot f(k)
+> ```
+> ```math
+> = \sum_i f(i) \left( \sum_j f(j) \left( \sum_k f(k) \right) \right)
+> ```
+> ```math
+> = \left( \sum_k f(k) \right) \left( \sum_j f(j)  \right) \left( \sum_i f(i) \right)
+> ```
+> So, we obtain:
+> ```math
+> = \left( \sum_{n_1 \in \{0,1\}} \exp(\ldots n_1 \ldots) \right) \left( \sum_{n_2 \in \{0,1\}} \exp(\ldots n_2 \ldots) \right) \left( \sum_{n_3 \in \{0,1\}} \exp(\ldots n_3 \ldots) \right)
+> ```
+> Factor ``i`` evaluates to:
+> ```math
+> \sum_{n_i \in \{0,1\}} \exp \left( -\frac{1}{T} n_i \cdot (\alpha h_i - \mu) \right)
+> ```
+> ```math
+> = 1 \quad + \quad \exp \left( -\frac{1}{T} \cdot (\alpha h_i - \mu) \right)
+> ```
+> So, the triple-sum over the specific potentials becomes:
+> ```math
+> \prod_i \left( 1 + \exp \left( -\frac{1}{T} \cdot (\alpha h_i - \mu) \right) \right)
+> ```
+> ```math
+> = \exp \left( -\frac{1}{T} \cdot (-T) \ln \left( \prod_i \left( 1 + \exp \left( -\frac{1}{T} \cdot (\alpha h_i - \mu) \right) \right) \right) \right)
+> ```
+> ```math
+> = \exp \left( -\frac{1}{T} \cdot \sum_i -T \cdot \ln \left( 1 + \exp \left( -\frac{1}{T} \cdot (\alpha h_i - \mu) \right) \right) \right)
+> ```
+> With 
+> ```math
+> V_\text{ef}(h) = -T \cdot \ln \left( 1 + \exp \left( -\frac{1}{T} \cdot (\alpha h - \mu) \right) \right)
+> ```
+> we obtain:
+> ```math
+> = \exp \left( -\frac{1}{T} \cdot \sum_i V_\text{ef}(h_i) \right)
+> ```
+> So, the whole sum becomes:
+> ```math
+> \exp \left( -\frac{1}{T} \cdot \sum_i \frac{\kappa}{2} ( \Delta h_i )^2 + \frac12 h_i^2 + V_\text{ef}(h_i) \right)
+> ```
+> **which is independent of the ``n_i``!**
+"""
+
+# ╔═╡ 991d34fe-52b8-11eb-3e69-71c14752fa93
+md"""
+## Outcome of summation over ``n``
+
+```math
+\mathcal{Z} = \int \int \int \left( \sum_{n_1 \in \{0,1\}} \sum_{n_2 \in \{0,1\}} \sum_{n_3 \in \{0,1\}} \exp \left( -\frac{1}{T} \mathcal{H}(h, n) \right) \right) \mathrm{d} h_1\, \mathrm{d} h_2\, \mathrm{d} h_3
+```
+becomes
+```math
+\int \int \int \left( \exp \left( -\frac{1}{T} \mathcal{H}_\text{ef}(h) \right) \right) \mathrm{d} h_1\, \mathrm{d} h_2\, \mathrm{d} h_3
+```
+
+##### From a statistical physics point-of-view, the membrane with stickers is equivalent to a *homogenous* membrane with specific potential ``V_\text{ef}``.
+"""
+
+# ╔═╡ 07cfb42c-52bd-11eb-3cc4-f1b62fde1267
+md"""
+## Stable state of rigid membranes
+"""
 
 # ╔═╡ acc59366-5024-11eb-02c2-8bcec276b8a5
 struct MembranePatch
@@ -241,14 +375,14 @@ function Δ(A, pos)
 end
 
 # ╔═╡ 283a8c06-4d17-11eb-06bf-7daf19a17658
-function time_step!(membr_new, membr, stickers; dt, κ, λ, α, l₀)
+function time_step!(membr_new, membr, stickers; dt, κ, α)
 	for pos in CartesianIndices(membr)
 		curv = Δ(membr, pos)
-		l = membr[pos].height
+		h = membr[pos].height
 		n = pos ∈ stickers
 		
 		acc = κ * curv
-		acc += -λ * (l - l₀)
+		acc += -.2 * h
 		acc += -n * α
 		
 		membr_new[pos] = MembranePatch(
@@ -260,28 +394,27 @@ end
 
 # ╔═╡ 3de19c2a-5019-11eb-0d2e-cf782fccd088
 function random_membrane(rows, cols)
-	# [exp(-.01((x - rows/2)^2 + (y - cols/2)^2)) for x in 1:rows, y in 1:cols]
 	[
-		MembranePatch(2.7 + .1sin(.4((x-rows/2)^2 + (y-cols/2)^2)), 0)
-		# MembranePatch(2.0, 0.0)
+		MembranePatch(-.3 + .2sin(.4((x-rows/2)^2 + (y-cols/2)^2)), 0)
+		# MembranePatch(0.0, 0.0)
 		for x in 1:rows, y in 1:cols
 	]
 end
 
 # ╔═╡ 0a8d4148-4d22-11eb-0c71-67f46d380c8c
 let
-	dt = .1
-	stickers_x = rand(1:7, 5)
-	stickers_y = rand(1:7, 5)
+	dt = .2
+	stickers_x = rand(1:7, 3)
+	stickers_y = rand(1:7, 3)
 	stickers = zip(stickers_x, stickers_y) .|> CartesianIndex
 	membr = random_membrane(7, 7)
 	membr_new = similar(membr)
 	
-	animation = @animate for t in 0:dt:10
-		time_step!(membr_new, membr, stickers, dt=dt, κ = 0.1, λ = 0.05, α = 0.3, l₀ = 3.)
+	animation = @animate for t in 0:dt:20
+		time_step!(membr_new, membr, stickers, dt=dt, κ=κ, α=α)
 		membr, membr_new = membr_new, membr
 		
-		wireframe([mp.height for mp in membr], zlim=(0,10), title="time: $t")
+		wireframe([mp.height for mp in membr], zlim=(-5,5), title="time: $t")
 		scatter3d!(stickers_y, stickers_x, [membr[pos].height for pos in stickers], label="stickers")
 	end
 	
@@ -305,21 +438,24 @@ end
 # ╟─0c9067de-5120-11eb-2237-713e8e71e70c
 # ╟─09defe78-512b-11eb-2580-fb7151aab310
 # ╟─93ae20e2-5136-11eb-0583-77ab9914dff9
+# ╟─b1c888e0-51f1-11eb-3539-d9029b5aadca
 # ╟─c62d8b2a-5136-11eb-04e9-61f66857db36
 # ╟─54ec3a66-513a-11eb-2cba-23e172fc04f9
 # ╟─5dc4c808-512c-11eb-2014-09beef01c5ff
 # ╟─8fcea4c2-5131-11eb-2485-33adf0944eea
-# ╟─354a363c-4c3e-11eb-2d7d-398e30d0d89c
-# ╠═dda5740e-4c3e-11eb-09f9-93185afaefc1
-# ╟─a3d46864-4c40-11eb-10b1-fd5ce77cde34
-# ╠═b4d5c3ec-4c40-11eb-178f-d7b83eb832fc
-# ╠═2718742a-4c3e-11eb-2fe6-a7576ffbd2cd
-# ╠═e9dc97a8-4c3d-11eb-38cf-77ff3d88cbbf
-# ╠═1566ae32-4c3f-11eb-0584-35a6a6a66ac9
-# ╠═4aa320de-4c3e-11eb-1430-19b130c88fe8
-# ╠═e7aaff68-4d09-11eb-3dbd-21317062a338
-# ╠═acc59366-5024-11eb-02c2-8bcec276b8a5
-# ╟─283a8c06-4d17-11eb-06bf-7daf19a17658
-# ╠═0a8d4148-4d22-11eb-0c71-67f46d380c8c
+# ╟─1afe5352-51b5-11eb-02c0-0b85f5ece696
+# ╟─5f9c70f2-51e9-11eb-2aaa-a9f77c2bf308
+# ╟─33935bb8-51f0-11eb-3cba-41bbf9fda673
+# ╟─884fb50a-529c-11eb-0b1d-077dc6aac82f
+# ╟─9746768c-529e-11eb-1872-2f8ea1befbb4
+# ╠═67769042-529c-11eb-39df-4bf23071224f
+# ╟─0a8d4148-4d22-11eb-0c71-67f46d380c8c
+# ╟─13a98e26-529f-11eb-34ee-991ba1a30a68
+# ╟─8dc766a4-52ba-11eb-2980-cb039c493081
+# ╟─3d545e7c-52a4-11eb-3cfe-ff3123a63d1d
+# ╟─991d34fe-52b8-11eb-3e69-71c14752fa93
+# ╟─07cfb42c-52bd-11eb-3cc4-f1b62fde1267
+# ╟─acc59366-5024-11eb-02c2-8bcec276b8a5
 # ╟─9f3bb8dc-4d1c-11eb-2088-d127849cb358
-# ╠═3de19c2a-5019-11eb-0d2e-cf782fccd088
+# ╟─283a8c06-4d17-11eb-06bf-7daf19a17658
+# ╟─3de19c2a-5019-11eb-0d2e-cf782fccd088

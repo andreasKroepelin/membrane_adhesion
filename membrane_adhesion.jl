@@ -61,14 +61,21 @@ Seminar *Systems Biology of Immunology*
 
 # ╔═╡ 6118fcf2-5103-11eb-0adc-1749ac4663a3
 md"""
-## Overview
-- Physical model of membranes
-- Linear sticker potential
+## Introduction
+Attraction to other membranes/surfaces mediated by adhesion molecules → observe **phase separation** into domains with small and large distance.
+
+###### Can we theoretically explain, why?
+
+#### Roadmap
+1. A physical model of membranes
+1. How membranes interact
+1. Statistical physics, transforming the system
+1. Identifying stable states under different conditions
 """
 
 # ╔═╡ 74f5d956-5104-11eb-09d8-3f6c54c0349c
 md"""
-## Physical model of membranes
+## Physical model of "biomimetic" membranes
 
 Membranes are not arbitrarily flexible (only down to ≈ 6 nm) → **discrete grid**
 """
@@ -94,7 +101,7 @@ end
 
 # ╔═╡ b2c22d78-511f-11eb-1fa6-091be862c054
 md"""
-Some grid points have irreversible **sticker proteins attached**:
+Some grid points have irreversible **sticker molecules attached**:
 """
 
 # ╔═╡ d28451b8-511f-11eb-1357-9b9bcfd4a484
@@ -402,7 +409,12 @@ sl_α
 md"α = $α"
 
 # ╔═╡ 20727094-52e2-11eb-04e4-796e8b8aac73
-md" ##### ⇒ Phases separation"
+md"""
+##### ⇒ Phases separation
+
+1. sticker-rich, strong adhesion, small distance
+1. sticker-poor, weak adhesion, high distance
+"""
 
 # ╔═╡ 79b48202-5353-11eb-109a-b5d8e1fdb8c2
 md"""
@@ -425,6 +437,25 @@ Know state probabilities (partition function!)
 → **Monte Carlo** sampling for fixed ``\kappa`` and ``\alpha``
 
 → analyse distribution of ``h_i``
+"""
+
+# ╔═╡ f26f191e-5367-11eb-208d-173b3c47b125
+md"""
+## Summary
+
+- modelled membrane as **discrete grid** with two degrees of freedom for each grid point: ``h_i`` and ``n_i``
+- assumed that total energy is composed of **elastic, generic, and sepcific potential**
+- could show that **ignoring sticker positions** ``n_i`` is equivalent
+- found **bifurcation** behaviour for stable states → **phase separation**
+- contemplated the **influence of membrane fluctuations**
+"""
+
+# ╔═╡ 0ec1d616-536a-11eb-00a8-d1e93d12e199
+md"""
+## Context and Final remarks
+- modelling approach quite broad, can be used with other potentials
+- results contrast *entropy-based* models showing that weaker adhesion and more energy increase phase separation
+- method integrates physical modelling, mathematical analysis, and stochastical simulation
 """
 
 # ╔═╡ 95e1a562-5360-11eb-19d4-a72985938bd7
@@ -588,6 +619,8 @@ simulate_membrane(κ = .05, α = .1)
 # ╟─badd3f52-52d2-11eb-2940-559721d6bad7
 # ╟─20727094-52e2-11eb-04e4-796e8b8aac73
 # ╟─79b48202-5353-11eb-109a-b5d8e1fdb8c2
+# ╟─f26f191e-5367-11eb-208d-173b3c47b125
+# ╟─0ec1d616-536a-11eb-00a8-d1e93d12e199
 # ╟─95e1a562-5360-11eb-19d4-a72985938bd7
 # ╟─c2c900fa-5360-11eb-3597-e9db443f74c1
 # ╟─b711d3a8-52df-11eb-1d8e-fd2938d23044

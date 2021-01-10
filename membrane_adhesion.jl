@@ -4,8 +4,17 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        el
+    end
+end
+
 # ╔═╡ 9402df7c-4c3d-11eb-0f04-670058576045
-using Plots, PlutoUI, Optim
+using Plots, PlutoUI
 
 # ╔═╡ 99fb7628-502a-11eb-1d23-7d3a143cd5d3
 gr();
@@ -233,10 +242,7 @@ Total energy of the system (*Hamiltionian*):
 """
 
 # ╔═╡ 9746768c-529e-11eb-1872-2f8ea1befbb4
-md"### watch it in action:"
-
-# ╔═╡ 67769042-529c-11eb-39df-4bf23071224f
-κ, α = .05, .1;
+md"### Dynamic illustration"
 
 # ╔═╡ 13a98e26-529f-11eb-34ee-991ba1a30a68
 md"""
@@ -320,15 +326,15 @@ md"""
 > ```
 > With 
 > ```math
-> V_\text{ef}(h) = -T \cdot \ln \left( 1 + \exp \left( -\frac{1}{T} \cdot (\alpha h - \mu) \right) \right)
+> V^\ast(h) = -T \cdot \ln \left( 1 + \exp \left( -\frac{1}{T} \cdot (\alpha h - \mu) \right) \right)
 > ```
 > we obtain:
 > ```math
-> = \exp \left( -\frac{1}{T} \cdot \sum_i V_\text{ef}(h_i) \right)
+> = \exp \left( -\frac{1}{T} \cdot \sum_i V^\ast(h_i) \right)
 > ```
 > So, the whole sum becomes:
 > ```math
-> \exp \left( -\frac{1}{T} \cdot \sum_i \frac{\kappa}{2} ( \Delta h_i )^2 + \frac12 h_i^2 + V_\text{ef}(h_i) \right)
+> \exp \left( -\frac{1}{T} \cdot \sum_i \frac{\kappa}{2} ( \Delta h_i )^2 + \frac12 h_i^2 + V^\ast(h_i) \right)
 > ```
 > **which is independent of the ``n_i``!**
 """
@@ -342,7 +348,7 @@ md"""
 ```
 becomes
 ```math
-\int \int \int \left( \exp \left( -\frac{1}{T} \mathcal{H}_\text{ef}(h) \right) \right) \mathrm{d} h_1\, \mathrm{d} h_2\, \mathrm{d} h_3
+\int \int \int \left( \exp \left( -\frac{1}{T} \mathcal{H}^\ast(h) \right) \right) \mathrm{d} h_1\, \mathrm{d} h_2\, \mathrm{d} h_3
 ```
 
 ##### From a statistical physics point-of-view, the membrane with stickers is equivalent to a *homogenous* membrane with specific potential ``V_\text{ef}``.
@@ -351,7 +357,88 @@ becomes
 # ╔═╡ 07cfb42c-52bd-11eb-3cc4-f1b62fde1267
 md"""
 ## Stable state of rigid membranes
+Assume that membrane is very rigid → no fluctuation → can neglect elastic term
+
+Potential for one grid point is effectively:
+```math
+V_\text{ef}(h) = \frac12 h^2 - \ln(1 + \exp(\mu - \alpha h))
+```
+
+Each grid point takes state where ``V_\text{ef}`` is at global minimum.
 """
+
+# ╔═╡ bcfa8132-52dc-11eb-031e-8bff734f18b1
+sl_α = @bind α Slider(1:.05:3, default=1.5);
+
+# ╔═╡ 41c6409a-52dd-11eb-146f-3dcd349a59d7
+sl_α
+
+# ╔═╡ eade94b4-52dc-11eb-1d44-2f336d6cc0c5
+md"α = $α"
+
+# ╔═╡ d53b14fa-52dc-11eb-383c-d96e79de0ba1
+μ = -α^2 / 2
+
+# ╔═╡ eb5456ac-52cd-11eb-183c-6d108568cfeb
+md"""
+## Sticker concentration
+
+We ignored their positions but can still identify their number!
+
+Each sticker contributes its chemical potential ``\mu`` to effective potential ``V_\text{ef}`` → number of stickers determines relationship between these quantities.
+
+```math
+N = \frac{\partial V_\text{ef}}{\partial \mu} = \frac{\exp(\mu - \alpha h)}{1 + \exp(\mu - \alpha h)}
+```
+"""
+
+# ╔═╡ a5636ab2-52de-11eb-03f8-c7d9be959f23
+sl_α
+
+# ╔═╡ b4bd1140-52de-11eb-108b-ff7679ea201c
+md"α = $α"
+
+# ╔═╡ 20727094-52e2-11eb-04e4-796e8b8aac73
+md" ##### ⇒ Coexisting phases"
+
+# ╔═╡ fc3bb076-52c5-11eb-3786-696ee9c7eb42
+function eval_V_ef(α, μ)
+	hs = (-2:.1:2) .- α/2
+	V(h) = h^2/2 - log(1 + exp(μ - α * h))
+	vs = V.(hs)
+	min_v = minimum(vs)
+	min_hs = filter(h -> V(h) ≈ min_v, hs)
+	(hs, vs, min_v, min_hs)
+end
+
+# ╔═╡ 3535ec6c-52ca-11eb-08a8-ab2c019b1e16
+let
+	(hs, vs, min_v, min_hs) = eval_V_ef(α, μ)
+	plot(hs, vs, size=(600,300), leg=:none, xguide="h", yguide="effective potential")
+	scatter!(min_hs, fill(min_v, length(min_hs)))
+end
+
+# ╔═╡ b711d3a8-52df-11eb-1d8e-fd2938d23044
+function eval_sticker_conc(α, μ)
+	(_, _, _, min_hs) = eval_V_ef(α, μ)
+	N(h) = exp(μ - α * h) / (1 + exp(μ - α * h))
+	N.(min_hs)
+end
+
+# ╔═╡ 467f380a-52e0-11eb-12d3-4f7305483ae2
+begin
+	conc_los = [minimum(eval_sticker_conc(α, -α^2/2)) for α in 1:.05:3]
+	conc_his = [maximum(eval_sticker_conc(α, -α^2/2)) for α in 1:.05:3]
+end;
+
+# ╔═╡ badd3f52-52d2-11eb-2940-559721d6bad7
+let
+	ns = eval_sticker_conc(α, μ)
+	
+	plot(1:.05:3, conc_los, s=:dash, c=1)
+	plot!(1:.05:3, conc_his, s=:dash, c=1)
+	scatter!(fill(α, length(ns)), ns, leg=:none, xlim=(1,3), ylim=(0,1), yguide="sticker concentration", xguide="α", size=(600,300))
+end
 
 # ╔═╡ acc59366-5024-11eb-02c2-8bcec276b8a5
 struct MembranePatch
@@ -402,7 +489,7 @@ function random_membrane(rows, cols)
 end
 
 # ╔═╡ 0a8d4148-4d22-11eb-0c71-67f46d380c8c
-let
+function simulate_membrane(; κ, α)
 	dt = .2
 	stickers_x = rand(1:7, 3)
 	stickers_y = rand(1:7, 3)
@@ -420,6 +507,9 @@ let
 	
 	gif(animation, fps = 20)
 end
+
+# ╔═╡ 67769042-529c-11eb-39df-4bf23071224f
+simulate_membrane(κ = .05, α = .1)
 
 # ╔═╡ Cell order:
 # ╟─9402df7c-4c3d-11eb-0f04-670058576045
@@ -449,13 +539,26 @@ end
 # ╟─884fb50a-529c-11eb-0b1d-077dc6aac82f
 # ╟─9746768c-529e-11eb-1872-2f8ea1befbb4
 # ╠═67769042-529c-11eb-39df-4bf23071224f
-# ╟─0a8d4148-4d22-11eb-0c71-67f46d380c8c
 # ╟─13a98e26-529f-11eb-34ee-991ba1a30a68
 # ╟─8dc766a4-52ba-11eb-2980-cb039c493081
 # ╟─3d545e7c-52a4-11eb-3cfe-ff3123a63d1d
 # ╟─991d34fe-52b8-11eb-3e69-71c14752fa93
 # ╟─07cfb42c-52bd-11eb-3cc4-f1b62fde1267
+# ╟─3535ec6c-52ca-11eb-08a8-ab2c019b1e16
+# ╟─41c6409a-52dd-11eb-146f-3dcd349a59d7
+# ╟─eade94b4-52dc-11eb-1d44-2f336d6cc0c5
+# ╠═d53b14fa-52dc-11eb-383c-d96e79de0ba1
+# ╟─bcfa8132-52dc-11eb-031e-8bff734f18b1
+# ╟─eb5456ac-52cd-11eb-183c-6d108568cfeb
+# ╟─a5636ab2-52de-11eb-03f8-c7d9be959f23
+# ╟─b4bd1140-52de-11eb-108b-ff7679ea201c
+# ╟─badd3f52-52d2-11eb-2940-559721d6bad7
+# ╟─20727094-52e2-11eb-04e4-796e8b8aac73
+# ╟─b711d3a8-52df-11eb-1d8e-fd2938d23044
+# ╟─fc3bb076-52c5-11eb-3786-696ee9c7eb42
+# ╟─467f380a-52e0-11eb-12d3-4f7305483ae2
 # ╟─acc59366-5024-11eb-02c2-8bcec276b8a5
+# ╟─0a8d4148-4d22-11eb-0c71-67f46d380c8c
 # ╟─9f3bb8dc-4d1c-11eb-2088-d127849cb358
 # ╟─283a8c06-4d17-11eb-06bf-7daf19a17658
 # ╟─3de19c2a-5019-11eb-0d2e-cf782fccd088

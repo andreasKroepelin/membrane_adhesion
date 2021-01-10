@@ -357,7 +357,7 @@ becomes
 # ╔═╡ 07cfb42c-52bd-11eb-3cc4-f1b62fde1267
 md"""
 ## Stable state of rigid membranes
-Assume that membrane is very rigid → no fluctuation → can neglect elastic term
+Assume that membrane is very rigid (``\kappa`` large) → no bending → can neglect elastic term
 
 Potential for one grid point is effectively:
 ```math
@@ -379,6 +379,9 @@ md"α = $α"
 # ╔═╡ d53b14fa-52dc-11eb-383c-d96e79de0ba1
 μ = -α^2 / 2
 
+# ╔═╡ 6e048840-533e-11eb-194a-6d3fe473e373
+md" ##### ⇒ Bifurcation"
+
 # ╔═╡ eb5456ac-52cd-11eb-183c-6d108568cfeb
 md"""
 ## Sticker concentration
@@ -388,7 +391,7 @@ We ignored their positions but can still identify their number!
 Each sticker contributes its chemical potential ``\mu`` to effective potential ``V_\text{ef}`` → number of stickers determines relationship between these quantities.
 
 ```math
-N = \frac{\partial V_\text{ef}}{\partial \mu} = \frac{\exp(\mu - \alpha h)}{1 + \exp(\mu - \alpha h)}
+\text{number of stickers} = \frac{\partial V_\text{ef}}{\partial \mu} = \frac{\exp(\mu - \alpha h)}{1 + \exp(\mu - \alpha h)}
 ```
 """
 
@@ -399,7 +402,36 @@ sl_α
 md"α = $α"
 
 # ╔═╡ 20727094-52e2-11eb-04e4-796e8b8aac73
-md" ##### ⇒ Coexisting phases"
+md" ##### ⇒ Phases separation"
+
+# ╔═╡ 79b48202-5353-11eb-109a-b5d8e1fdb8c2
+md"""
+## Stable states of flexible membranes
+
+Fluctuating membranes make **crossing potential barriers easier**.
+
+Lower ``\kappa``
+
+→ higher flexibility
+
+→ need **higher potential barrier for phase separation**
+
+→ need **higher ``\alpha``**
+
+#### How to specify when phase separation occurs?
+
+Know state probabilities (partition function!)
+
+→ **Monte Carlo** sampling for fixed ``\kappa`` and ``\alpha``
+
+→ analyse distribution of ``h_i``
+"""
+
+# ╔═╡ 95e1a562-5360-11eb-19d4-a72985938bd7
+md"## "
+
+# ╔═╡ c2c900fa-5360-11eb-3597-e9db443f74c1
+md"## "
 
 # ╔═╡ fc3bb076-52c5-11eb-3786-696ee9c7eb42
 function eval_V_ef(α, μ)
@@ -549,11 +581,15 @@ simulate_membrane(κ = .05, α = .1)
 # ╟─eade94b4-52dc-11eb-1d44-2f336d6cc0c5
 # ╠═d53b14fa-52dc-11eb-383c-d96e79de0ba1
 # ╟─bcfa8132-52dc-11eb-031e-8bff734f18b1
+# ╟─6e048840-533e-11eb-194a-6d3fe473e373
 # ╟─eb5456ac-52cd-11eb-183c-6d108568cfeb
 # ╟─a5636ab2-52de-11eb-03f8-c7d9be959f23
 # ╟─b4bd1140-52de-11eb-108b-ff7679ea201c
 # ╟─badd3f52-52d2-11eb-2940-559721d6bad7
 # ╟─20727094-52e2-11eb-04e4-796e8b8aac73
+# ╟─79b48202-5353-11eb-109a-b5d8e1fdb8c2
+# ╟─95e1a562-5360-11eb-19d4-a72985938bd7
+# ╟─c2c900fa-5360-11eb-3597-e9db443f74c1
 # ╟─b711d3a8-52df-11eb-1d8e-fd2938d23044
 # ╟─fc3bb076-52c5-11eb-3786-696ee9c7eb42
 # ╟─467f380a-52e0-11eb-12d3-4f7305483ae2

@@ -358,7 +358,7 @@ becomes
 \int \int \int \left( \exp \left( -\frac{1}{T} \mathcal{H}^\ast(h) \right) \right) \mathrm{d} h_1\, \mathrm{d} h_2\, \mathrm{d} h_3
 ```
 
-##### From a statistical physics point-of-view, the membrane with stickers is equivalent to a *homogenous* membrane with specific potential ``V_\text{ef}``.
+##### From a statistical physics point-of-view, the membrane with stickers is equivalent to a *homogenous* membrane with specific potential ``V^\ast``.
 """
 
 # ╔═╡ 07cfb42c-52bd-11eb-3cc4-f1b62fde1267

@@ -1,0 +1,84 @@
+\documentclass[twocolumn]{scrartcl}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[]{amsmath}
+\usepackage[]{amssymb}
+\usepackage[top=1.0cm,left=1.5cm,right=1.5cm,bottom=1.5cm]{geometry}
+\usepackage[]{graphicx}
+\usepackage[colorlinks=true, urlcolor=blue]{hyperref}
+
+
+\renewcommand\familydefault{\sfdefault}
+
+\title{Adhesion of membranes with competing specific and generic interactions}
+\subtitle{Handout companioning the seminar talk}
+\author{Andreas Kröpelin}
+\date{January 11, 2021}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+This talk is based on the paper of the same name by T.~R.~Weikl \textit{et al.} (DOI \texttt{10.1140/\allowbreak{}epje/\allowbreak{}i2002-10008-2}).
+Presentation notebook available \href{https://github.com/andreasKroepelin/membrane_adhesion}{on GitHub}.
+
+\subsection*{Goal}
+Find theoretical explanation for \emph{phase separation} into domains with small and large distance observed when a \emph{biomimetic} (\textit{i.e.} ``similar to what is found in nature'') membrane with adhesive sticker molecules comes into close contact with a surface/another membrane.
+
+\subsection*{Physical model}
+Describe membrane as \emph{discrete grid} ($\approx 6$ nm units).
+Each grid point $i$ can move vertically and has position $h_i$ and potentioally has an attached sticker molecule ($n_i = 1$) or not ($n_i = 0$).
+
+\subsection*{Crashcourse on Potentials}
+If particle has potential $V(x)$ at position $x$, it experiences a force $F(x) = -\frac{\mathrm{d}V(x)}{\mathrm{d}x}$.
+\textbf{Harmonic potential:} ``oscillation'', force: $-\text{const} \cdot x$, potential: $\frac12 \text{const} \cdot x^2$.
+\textbf{Linear potential:} ``fall'', force: $-\text{const}$, potential: $\text{const} \cdot x$.
+
+\subsection*{Three membrane interactions}
+\textbf{Elastic bending:} potential $\frac{\kappa}{2}(\Delta h)^2$ with Laplacian $\Delta h = \frac{\partial^2 h}{\partial x^2} + \frac{\partial^2 h}{\partial y^2}$ (``local curvature'').
+\textbf{Generic interaction:} Second-order-approximation of Lennard-Jones potential, $\frac12 h^2$, where $h=0$ at minimum of potential.
+\textbf{Specific interaction:} Extended stickers constantly pull down, potential $\alpha \cdot h$, and have internal \emph{chemical potential} $\mu$, only relevant if $n_i = 1$.
+\textbf{Total energy (Hamiltonian):}
+\begin{align*}
+    \mathcal{H}(h, n) = \sum_i \frac{\kappa}{2}(\Delta h_i)^2 + \frac12 h_i^2 + n_i \cdot (\alpha h_i - \mu)
+\end{align*}
+
+\subsection*{Partition function $ \mathcal{Z} $}
+Sum of all state probabilities, where each state with energy $E$ has probability proportional to $\exp(-\frac{1}{T} \cdot E)$ (Boltzmann distribution). \\
+State of membrane is $h_i \in \mathbb{R}$ and $n_i \in \{0,1\}$ for each grid point $i = 1,\ldots,N$, so
+\begin{equation*}
+\resizebox{\hsize}{!}{
+    $\displaystyle
+    \mathcal{Z} = \int \cdots \int \sum_{n_1 \in \{0,1\}} \cdots \sum_{n_N \in \{0,1\}} \exp \left(-\frac{1}{T} \mathcal{H}(h,n) \right) \; \mathrm{d}h_1 \cdots \mathrm{d}h_N.
+    $
+}
+\end{equation*}
+Evaluating sums over $n_i$ gives
+\begin{align*}
+    \mathcal{Z} = \int \cdots \int \exp \left( -\frac{1}{T} \mathcal{H}^\ast(h) \right) \; \mathrm{d}h_1 \cdots \mathrm{d}h_N
+\end{align*}
+(\emph{independent of $n$!}), with
+\begin{align*}
+    \mathcal{H}^\ast(h) = \sum_i \frac{\kappa}{2}(\Delta h_i)^2 + \frac12 h_i^2 + V^\ast(h_i)
+\end{align*}
+and
+\begin{align*}
+    V^\ast(h) = -T \cdot \ln \left( 1 + \exp \left( -\frac{1}{T} \cdot (\alpha h - \mu) \right) \right)
+\end{align*}
+
+\subsection*{Stable states}
+\textbf{For rigid membrane ($\kappa$ large):}
+Neglect elastic term, potential for one grid point is effectively
+\begin{align*}
+    V_\text{ef}(h) = \frac12 h^2 - \ln(1 + \exp(\mu - \alpha h))
+\end{align*}
+$\longrightarrow$ one minimum for $\alpha \leq 2$, two minima for $\alpha > 2$, if $\mu = -\frac12 \alpha^2$,
+corresponding sticker concentration found as $-\frac{\partial V_\text{ef}}{\partial \mu} = \frac{\exp(\mu - \alpha h)}{1 + \exp(\mu - \alpha h)}$
+$\longrightarrow$ \emph{phase separation} for strong enough adhesion force: sticker-rich, strong adhesion, small distance \emph{vs.} sticker-poor, weak adhesion, high distance. \\
+\textbf{For flexible membrane ($\kappa$ small):}
+Similar phase separation only possible for larger $\alpha$, otherwise potential barrier too low.
+Find critical $\alpha$ by Monte Carlo sampling of membrane states (\textit{via} partition function) and analysing distribution of $h_i$.
+
+\end{document}

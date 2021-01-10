@@ -213,7 +213,7 @@ TwoColumn(
 	md"""
 	Membrane is close to surface/other membrane → *Lennard-Jones potential*
 	
-	Local approximation as **harmonic potential**: ``V_\text{g}(h) = h^2``
+	Local approximation as **harmonic potential**: ``V_\text{g}(h) = \frac12 h^2``
 	
 	(``h = 0`` at minimum of potential)
 	""",
@@ -398,7 +398,7 @@ We ignored their positions but can still identify their number!
 Each sticker contributes its chemical potential ``\mu`` to effective potential ``V_\text{ef}`` → number of stickers determines relationship between these quantities.
 
 ```math
-\text{number of stickers} = \frac{\partial V_\text{ef}}{\partial \mu} = \frac{\exp(\mu - \alpha h)}{1 + \exp(\mu - \alpha h)}
+\text{number of stickers} = -\frac{\partial V_\text{ef}}{\partial \mu} = \frac{\exp(\mu - \alpha h)}{1 + \exp(\mu - \alpha h)}
 ```
 """
 
